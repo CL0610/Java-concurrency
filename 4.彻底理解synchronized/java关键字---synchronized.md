@@ -27,11 +27,14 @@
 
 开启了10个线程，每个线程都累加了1000000次，如果结果正确的话自然而然总数就应该是10 * 1000000 = 10000000。可就运行多次结果都不是这个数，而且每次运行结果都不一样。这是为什么了？有什么解决方案了？这就是我们今天要聊的事情。 
  
-在上一篇博文中我们已经了解了[java内存模型](http://www.jianshu.com/p/d52fea0d6ba5)的一些知识，并且已经知道出现线程安全的主要来源于JMM的设计，主要集中在主内存和线程的工作内存而导致的**内存可见性问题**，以及**重排序导致的问题**，进一步知道了**happens-before规则**。线程运行时拥有自己的栈空间，会在自己的栈空间运行，如果多线程间没有共享的数据也就是说多线程间并没有协作完成一件事情，那么，多线程就不能发挥优势，不能带来巨大的价值。那么共享数据的线程安全问题怎样处理？很自然而然的想法就是每一个线程依次去读写这个共享变量，这样就不会有任何数据安全的问题，因为每个线程所操作的都是当前最新的版本数据。那么，在java关键字synchronized就具有使每个线程依次排队操作共享变量的功能。很显然，这种同步机制效率很低，但synchronized是其他并发容器实现的基础，对它的理解也会大大提升对并发编程的感觉，从功利的角度来说，这也是面试高频的考点。好了，下面，就来具体说说这个关键字。
+在上一篇博文中我们已经了解了[java内存模型](https://juejin.im/post/5ae6d309518825673123fd0e)的一些知识，并且已经知道出现线程安全的主要来源于JMM的设计，主要集中在主内存和线程的工作内存而导致的**内存可见性问题**，以及**重排序导致的问题**，进一步知道了**happens-before规则**。线程运行时拥有自己的栈空间，会在自己的栈空间运行，如果多线程间没有共享的数据也就是说多线程间并没有协作完成一件事情，那么，多线程就不能发挥优势，不能带来巨大的价值。那么共享数据的线程安全问题怎样处理？很自然而然的想法就是每一个线程依次去读写这个共享变量，这样就不会有任何数据安全的问题，因为每个线程所操作的都是当前最新的版本数据。那么，在java关键字synchronized就具有使每个线程依次排队操作共享变量的功能。很显然，这种同步机制效率很低，但synchronized是其他并发容器实现的基础，对它的理解也会大大提升对并发编程的感觉，从功利的角度来说，这也是面试高频的考点。好了，下面，就来具体说说这个关键字。
 # 2. synchronized实现原理 #
 在java代码中使用synchronized可是使用在代码块和方法中，根据Synchronized用的位置可以有这些使用场景：
 
-![Synchronized的使用场景](http://upload-images.jianshu.io/upload_images/2615789-08f16aeac7e0977d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/610)
+
+![Synchronized的使用场景](https://user-gold-cdn.xitu.io/2018/4/30/16315cc79aaac173?w=700&h=413&f=png&s=33838)
+
+
 如图，synchronized可以用在**方法**上也可以使用在**代码块**中，其中方法是实例方法和静态方法分别锁的是该类的实例对象和该类的对象。而使用在代码块中也可以分为三种，具体的可以看上面的表格。这里的需要注意的是：**如果锁的是类对象的话，尽管new多个实例对象，但他们仍然是属于同一个类依然会被锁住，即线程之间保证同步关系**。
 
 现在我们已经知道了怎样synchronized了，看起来很简单，拥有了这个关键字就真的可以在并发编程中得心应手了吗？爱学的你，就真的不想知道synchronized底层是怎样实现了吗？
@@ -49,19 +52,25 @@
 	    }
 	}
 上面的代码中有一个同步代码块，锁住的是类对象，并且还有一个同步静态方法，锁住的依然是该类的类对象。编译之后，切换到SynchronizedDemo.class的同级目录之后，然后用**javap -v SynchronizedDemo.class**查看字节码文件：
-![SynchronizedDemo.class](http://upload-images.jianshu.io/upload_images/2615789-10e9e5d556d5214d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/610)
+
+
+
+![SynchronizedDemo.class](https://user-gold-cdn.xitu.io/2018/4/30/16315cce259af0d2?w=700&h=330&f=png&s=68919)
+
+
 如图，上面用黄色高亮的部分就是需要注意的部分了，这也是添Synchronized关键字之后独有的。执行同步代码块后首先要先执行**monitorenter**指令，退出的时候**monitorexit**指令。通过分析之后可以看出，使用Synchronized进行同步，其关键就是必须要对对象的监视器monitor进行获取，当线程获取monitor后才能继续往下执行，否则就只能等待。而这个获取的过程是**互斥**的，即同一时刻只有一个线程能够获取到monitor。上面的demo中在执行完同步代码块之后紧接着再会去执行一个静态同步方法，而这个方法锁的对象依然就这个类对象，那么这个正在执行的线程还需要获取该锁吗？答案是不必的，从上图中就可以看出来，执行静态同步方法的时候就只有一条monitorexit指令，并没有monitorenter获取锁的指令。这就是**锁的重入性**，即在同一锁程中，线程不需要再次获取同一把锁。Synchronized先天具有重入性。**每个对象拥有一个计数器，当线程获取该对象锁后，计数器就会加一，释放锁后就会将计数器减一**。
 
-任意一个对象都拥有自己的监视器，当这个对象由同步块或者这个对象的同步方法调用时，执行方法的线程必须先获取该对象的监视器才能进入同步块和同步方法，如果没有获取到监视器的线程将会被阻塞在同步块和同步方法的入口处，进入到BLOCKED状态（关于线程的状态可以看[这篇文章](http://www.jianshu.com/p/f65ea68a4a7f)）
+任意一个对象都拥有自己的监视器，当这个对象由同步块或者这个对象的同步方法调用时，执行方法的线程必须先获取该对象的监视器才能进入同步块和同步方法，如果没有获取到监视器的线程将会被阻塞在同步块和同步方法的入口处，进入到BLOCKED状态（关于线程的状态可以看[这篇文章](https://juejin.im/post/5ae6cf7a518825670960fcc2)
 
 下图表现了对象，对象监视器，同步队列以及执行线程状态之间的关系：
 
-![对象，对象监视器，同步队列和线程状态的关系](http://upload-images.jianshu.io/upload_images/2615789-58bf5739c7c49c05.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/610)
+![对象，对象监视器，同步队列和线程状态的关系](https://user-gold-cdn.xitu.io/2018/4/30/16315cd5fa7cf91c?w=700&h=261&f=png&s=54962)
+
 该图可以看出，任意线程对Object的访问，首先要获得Object的监视器，如果获取失败，该线程就进入同步状态，线程状态变为BLOCKED，当Object的监视器占有者释放后，在同步队列中得线程就会有机会重新获取该监视器。
 
 
 ## 2.2 synchronized的happens-before关系 ##
-在上一篇文章中讨论过[happens-before](http://www.jianshu.com/p/d52fea0d6ba5)规则，抱着学以致用的原则我们现在来看一看Synchronized的happens-before规则，即监视器锁规则：对同一个监视器的解锁，happens-before于对该监视器的加锁。继续来看代码：
+在上一篇文章中讨论过[happens-before](https://juejin.im/post/5ae6d309518825673123fd0e)规则，抱着学以致用的原则我们现在来看一看Synchronized的happens-before规则，即监视器锁规则：对同一个监视器的解锁，happens-before于对该监视器的加锁。继续来看代码：
 
 	public class MonitorDemo {
 	    private int a = 0;
@@ -77,7 +86,11 @@
 
 该代码的happens-before关系如图所示：
 
-![Synchronized的happens-before关系](http://upload-images.jianshu.io/upload_images/2615789-d025c6be230f72a2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/610)
+
+
+![synchronized的happens-before关系](https://user-gold-cdn.xitu.io/2018/4/30/16315ce6ea84f240?w=650&h=629&f=png&s=61572)
+
+
 在图中每一个箭头连接的两个节点就代表之间的happens-before关系，黑色的是通过程序顺序规则推导出来，红色的为监视器锁规则推导而出：**线程A释放锁happens-before线程B加锁**，蓝色的则是通过程序顺序规则和监视器锁规则推测出来happens-befor关系，通过传递性规则进一步推导的happens-before关系。现在我们来重点关注2 happens-before 5，通过这个关系我们可以得出什么？
 
 根据happens-before的定义中的一条:如果A happens-before B，则A的执行结果对B可见，并且A的执行顺序先于B。线程A先对共享变量A进行加一，由2 happens-before 5关系可知线程A的执行结果对线程B可见即线程B所读取到的a的值为1。
@@ -86,10 +99,16 @@
 在上一篇文章提到过JMM核心为两个部分：happens-before规则以及内存抽象模型。我们分析完Synchronized的happens-before关系后，还是不太完整的，我们接下来看看基于java内存抽象模型的Synchronized的内存语义。
 
 废话不多说依旧先上图。
-![线程A写共享变量](http://upload-images.jianshu.io/upload_images/2615789-8faace4c9e651d6e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![线程A写共享变量](https://user-gold-cdn.xitu.io/2018/4/30/16315cef21fd3ad8?w=557&h=440&f=png&s=10816)
+
+
 从上图可以看出，线程A会首先先从主内存中读取共享变量a=0的值然后将该变量拷贝到自己的本地内存，进行加一操作后，再将该值刷新到主内存，整个过程即为线程A 加锁-->执行临界区代码-->释放锁相对应的内存语义。
 
-![线程B读共享变量](http://upload-images.jianshu.io/upload_images/2615789-540462b1425e38d4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+![线程B读共享变量](https://user-gold-cdn.xitu.io/2018/4/30/16315cf41661491e?w=564&h=458&f=png&s=14468)
+
 线程B获取锁的时候同样会从主内存中共享变量a的值，这个时候就是最新的值1,然后将该值拷贝到线程B的工作内存中去，释放锁的时候同样会重写到主内存中。
 
 从整体上来看，线程A的执行结果（a=1）对线程B是可见的，实现原理为：释放锁的时候会将值刷新到主内存中，其他线程获取锁时会强制从主内存中获取最新的值。另外也验证了2 happens-before 5，2的执行结果对5是可见的。
@@ -134,13 +153,15 @@ CAS的实现需要硬件指令集的支撑，在JDK1.5后虚拟机才可以使�
 
 在同步的时候是获取对象的monitor,即获取到对象的锁。那么对象的锁怎么理解？无非就是类似对对象的一个标志，那么这个标志就是存放在Java对象的对象头。Java对象头里的Mark Word里默认的存放的对象的Hashcode,分代年龄和锁标记位。32为JVM Mark Word默认存储结构为（注:java对象头以及下面的锁状态变化摘自《java并发编程的艺术》一书，该书我认为写的足够好，就没在自己组织语言班门弄斧了）：
 
+![Mark Word存储结构](https://user-gold-cdn.xitu.io/2018/4/30/16315cff10307a29?w=700&h=71&f=png&s=23717)
 
-![Mark Word存储结构](http://upload-images.jianshu.io/upload_images/2615789-668194c20734e01f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/620)
 如图在Mark Word会默认存放hasdcode，年龄值以及锁标志位等信息。
 
 Java SE 1.6中，锁一共有4种状态，级别从低到高依次是：**无锁状态、偏向锁状态、轻量级锁状态和重量级锁状态**，这几个状态会随着竞争情况逐渐升级。**锁可以升级但不能降级**，意味着偏向锁升级成轻量级锁后不能降级成偏向锁。这种锁升级却不能降级的策略，目的是为了提高获得锁和释放锁的效率。对象的MarkWord变化为下图：
 
-![Mark Word状态变化](http://upload-images.jianshu.io/upload_images/2615789-4556662630b15159.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800)
+![Mark Word状态变化](https://user-gold-cdn.xitu.io/2018/4/30/16315d056598e4c2?w=700&h=151&f=png&s=47968)
+
+
 
 ## 3.2 偏向锁 ##
 
@@ -156,12 +177,14 @@ HotSpot的作者经过研究发现，大多数情况下，锁不仅不存在多�
 偏向锁使用了一种**等到竞争出现才释放锁**的机制，所以当其他线程尝试竞争偏向锁时，持有偏向锁的线程才会释放锁。
 
 
-![偏向锁撤销流程](http://upload-images.jianshu.io/upload_images/2615789-5b183494bd1e145d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![偏向锁撤销流程](https://user-gold-cdn.xitu.io/2018/4/30/16315d0b13b37da4?w=567&h=736&f=png&s=72325)
+
+
 如图，偏向锁的撤销，需要等待**全局安全点**（在这个时间点上没有正在执行的字节码）。它会首先暂停拥有偏向锁的线程，然后检查持有偏向锁的线程是否活着，如果线程不处于活动状态，则将对象头设置成无锁状态；如果线程仍然活着，拥有偏向锁的栈会被执行，遍历偏向对象的锁记录，栈中的锁记录和对象头的Mark Word**要么**重新偏向于其他线程，**要么**恢复到无锁或者标记对象不适合作为偏向锁，最后唤醒暂停的线程。
 
 下图线程1展示了偏向锁获取的过程，线程2展示了偏向锁撤销的过程。
 
-![偏向锁获取和撤销流程](http://upload-images.jianshu.io/upload_images/2615789-0b954fa67e8721c2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/630)
+![偏向锁获取和撤销流程](https://user-gold-cdn.xitu.io/2018/4/30/16315cb9175365f5?w=630&h=703&f=png&s=160223)
 
 > **如何关闭偏向锁**
 
@@ -170,7 +193,7 @@ HotSpot的作者经过研究发现，大多数情况下，锁不仅不存在多�
 ## 3.3 轻量级锁 ##
 > **加锁**
 
-线程在执行同步块之前，JVM会先在当前线程的栈桢中**创建用于存储锁记录的空间**，并将对象头中的Mark Word复制到锁记录中，官方称为**Displaced Mark Word**。然后线程尝试使用CAS**将对象头中的Mark Word替换为指向锁记录的指针**。如果成功，当前线程获得锁，如果失败，表示其他线程竞争锁，当前线程便尝试使用自旋来获取锁
+线程在执行同步块之前，JVM会先在当前线程的栈桢中**创建用于存储锁记录的空间**，并将对象头中的Mark Word复制到锁记录中，官方称为**Displaced Mark Word**。然后线程尝试使用CAS**将对象头中的Mark Word替换为指向锁记录的指针**。如果成功，当前线程获得锁，如果失败，表示其他线程竞争锁，当前线程便尝试使用自旋来获取锁。
 
 
 > **解锁**
@@ -178,12 +201,12 @@ HotSpot的作者经过研究发现，大多数情况下，锁不仅不存在多�
 轻量级解锁时，会使用原子的CAS操作将Displaced Mark Word替换回到对象头，如果成功，则表示没有竞争发生。如果失败，表示当前锁存在竞争，锁就会膨胀成重量级锁。下图是两个线程同时争夺锁，导致锁膨胀的流程图。
 
 
-![轻量级锁加锁解锁以及锁膨胀](http://upload-images.jianshu.io/upload_images/2615789-0c92d94dad8bdc27.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800)
+![轻量级锁加锁解锁以及锁膨胀](https://user-gold-cdn.xitu.io/2018/4/30/16315cb9193719c2?w=794&h=772&f=png&s=287958)
 
 因为自旋会消耗CPU，为了避免无用的自旋（比如获得锁的线程被阻塞住了），一旦锁升级成重量级锁，就不会再恢复到轻量级锁状态。当锁处于这个状态下，其他线程试图获取锁时，都会被阻塞住，当持有锁的线程释放锁之后会唤醒这些线程，被唤醒的线程就会进行新一轮的夺锁之争。
 ## 3.5 各种锁的比较 ##
 
-![各种锁的对比](http://upload-images.jianshu.io/upload_images/2615789-56647501fd77289f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800)
+![各种锁的对比](https://user-gold-cdn.xitu.io/2018/4/30/16315cb91da523d9?w=800&h=193&f=png&s=116058)
 
 # 4. 一个例子 #
 经过上面的理解，我们现在应该知道了该怎样解决了。更正后的代码为：
