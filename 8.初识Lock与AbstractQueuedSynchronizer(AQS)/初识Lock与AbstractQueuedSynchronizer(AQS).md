@@ -218,7 +218,9 @@ MutexDemo：
 	    }
 	}
 
-执行情况：![mutex的执行情况.png](http://upload-images.jianshu.io/upload_images/2615789-cabcd4a169178b5b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+执行情况：
+
+![mutex的执行情况.png](http://upload-images.jianshu.io/upload_images/2615789-cabcd4a169178b5b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 上面的这个例子实现了独占锁的语义，在同一个时刻只允许一个线程占有锁。MutexDemo新建了10个线程，分别睡眠3s。从执行情况也可以看出来当前Thread-6正在执行占有锁而其他Thread-7,Thread-8等线程处于WAIT状态。按照推荐的方式，Mutex定义了一个**继承AQS的静态内部类Sync**,并且重写了AQS的tryAcquire等等方法，而对state的更新也是利用了setState(),getState()，compareAndSetState()这三个方法。在实现实现lock接口中的方法也只是调用了AQS提供的模板方法（因为Sync继承AQS）。从这个例子就可以很清楚的看出来，在同步组件的实现上主要是利用了AQS，而AQS“屏蔽”了同步状态的修改，线程排队等底层实现，通过AQS的模板方法可以很方便的给同步组件的实现者进行调用。而针对用户来说，只需要调用同步组件提供的方法来实现并发编程即可。同时在新建一个同步组件时需要把握的两个关键点是：
 1. 实现同步组件时推荐定义继承AQS的静态内存类，并重写需要的protected修饰的方法；
