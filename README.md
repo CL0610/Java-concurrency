@@ -151,4 +151,4 @@ github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/
 [知识图谱原图链接，如果有用，可克隆给自己使用](https://www.processon.com/mindmap/5ab5a979e4b0a248b0e026b3)
 
 
-![JAVA并发知识图谱.png](https://upload-images.jianshu.io/upload_images/2615789-2465df1a22cfde14.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![JAVA并发知识图谱.png](https://github.com/CL0610/Java-concurrency/blob/master/Java并发知识图谱.png)
