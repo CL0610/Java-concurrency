@@ -2,7 +2,7 @@
 
 > 努力的意义，就是，在以后的日子里，放眼望去全是自己喜欢的人和事！
 
-github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/Java-concurrency)，欢迎题issue和Pull request。所有的文档都是自己亲自码的，如果觉得不错，欢迎给star鼓励支持 :)
+欢迎提issue和Pull request。所有的文档都是自己亲自码的，如果觉得不错，欢迎给star鼓励支持 :)
 
 
 整个系列文章为**Java并发专题**，一是自己的兴趣，二是，这部分在实际理解上很有难度，另外在面试过程中也是经常被问到。所以在学习过程中，记录了Java并发相关的基础知识，一是自己对知识能够建立体系，同时也希望有幸能够对其他人有用。
@@ -76,7 +76,7 @@ github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/
 
 	知识点：（1）与Object的wait/notify机制相比具有的特性；（2）与Object的wait/notify相对应的方法；（3）底层数据结构；（4）await实现原理；（5）signal/signalAll实现原理；（6）await和signal/signalAll的结合使用；
 
-	**4.6 [LockSupport工具](https://www.jianshu.com/p/9677a754cf60)**
+	4.6 [LockSupport工具](https://juejin.im/post/5aeed27f51882567336aa0fa)
 
 	知识点：（1）主要功能；（2）与synchronized阻塞唤醒相比具有的特色；
 
@@ -109,7 +109,7 @@ github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/
 
 	[并发容器之ArrayBlockingQueue和LinkedBlockingQueue实现原理详解](https://juejin.im/post/5aeebdb26fb9a07aa83ea17e)
 
-6. 线程池（Executor体系）
+6. **线程池（Executor体系）**
 
 	6.1 [线程池实现原理](https://juejin.im/post/5aeec0106fb9a07ab379574f)
 
@@ -123,13 +123,13 @@ github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/
 
 	知识点：（1）FutureTask的几种状态；（2）get方法；（3）cancel方法；（4）应用场景；（5）实现 Runnable接口
 
-7. 原子操作类
+7. **原子操作类**
 
 	7.1  [Java中atomic包中的原子操作类总结](https://juejin.im/post/5aeec351518825670a103292)
 	
 	知识点：（1）实现原理；（2）原子更新基本类型；（3）原子更新数组类型；（4）原子更新引用类型；（5）原子更新字段类型
 
-8. 并发工具
+8. **并发工具**
 
 	8.1 [大白话说java并发工具类-CountDownLatch，CyclicBarrier](https://juejin.im/post/5aeec3ebf265da0ba76fa327)
 
@@ -139,7 +139,7 @@ github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/
 
 	知识点：（1）资源访问控制Semaphore；（2）数据交换Exchanger
 
-9. 并发实践
+9. **并发实践**
 
 	9.1 [一篇文章，让你彻底弄懂生产者--消费者问题](https://juejin.im/post/5aeec675f265da0b7c072c56)
 
@@ -148,7 +148,6 @@ github：[https://github.com/CL0610/Java-concurrency](https://github.com/CL0610/
 
 **可移动到新窗口，放大查看效果更好或者查看原图**
 
-[知识图谱原图链接，如果有用，可克隆给自己使用](https://www.processon.com/mindmap/5ab5a979e4b0a248b0e026b3)
-
+[知识图谱原图链接，如果有用，可克隆给自己使用](https://www.processon.com/view/5ab5a979e4b0a248b0e026b3?fromnew=1)
 
 ![JAVA并发知识图谱.png](https://github.com/CL0610/Java-concurrency/blob/master/Java并发知识图谱.png)
