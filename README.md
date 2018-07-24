@@ -1,3 +1,4 @@
+![](https://upload-images.jianshu.io/upload_images/2615789-c05974dae29ef81a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 > 努力的意义，就是，在以后的日子里，放眼望去全是自己喜欢的人和事！
