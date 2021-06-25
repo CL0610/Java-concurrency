@@ -149,4 +149,4 @@
 
 [知识图谱原图链接，如果有用，可克隆给自己使用](https://www.processon.com/view/5ab5a979e4b0a248b0e026b3?fromnew=1)
 
-![JAVA并发知识图谱.png](https://github.com/CL0610/Java-concurrency/blob/master/Java并发知识图谱.png)
+![JAVA并发知识图谱.png](Java并发知识图谱.png)
